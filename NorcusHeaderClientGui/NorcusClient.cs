@@ -23,14 +23,22 @@ namespace NorcusHeaderClientGui
         private string messageLabel;
         public string MessageLabel
         {
-            get => messageLabel.Replace(",\u00a0", "," + SongSeparator);
+            get
+            {
+                string msg = messageLabel;
+                // Pokud zobrazuji na řádku, nahradím mezery nedělitelnými, ať není žádná položka přes 2 řádky.
+                if (!Properties.Settings.Default.vertical)
+                    msg = msg.Replace(" ", "\u00a0");
+
+                return msg.Replace("@", SongSeparator);
+            }
             set
             {
                 messageLabel = value;
                 Console.WriteLine(value);
             }
         }
-        public string SongSeparator => Properties.Settings.Default.vertical ? "\n" : " ";
+        public string SongSeparator => Properties.Settings.Default.vertical ? "\n" : ", ";
 
         private string hostIp;
         private int port;
@@ -112,7 +120,7 @@ namespace NorcusHeaderClientGui
                         }
                         catch { }
                         await ConnectServerAsync();
-                        await Task.Run(() => ProcessMessage(msgEmpty));
+                        ProcessMessage(msgEmpty);
                         continue;
                     }
 
@@ -143,8 +151,9 @@ namespace NorcusHeaderClientGui
             // Pokud je poslána sada:
             if (text.StartsWith("SADA"))
             {
-                // Nahrazení mezer mezi položkami v sadě nedělitelnými
-                text = text.Replace("', '", "',\u00a0'");
+                // Nastavit oddělovač mezi položkami v sadě znakem @
+                text = text.Replace("', '", "@");
+
                 text = text.Replace("'", "");
                 text = text.Substring(4);
             }                
