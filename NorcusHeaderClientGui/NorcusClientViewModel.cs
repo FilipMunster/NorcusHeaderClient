@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows.Input;
@@ -10,10 +11,6 @@ namespace NorcusHeaderClientGui
 {
     class NorcusClientViewModel : INotifyPropertyChanged
     {
-        private const int port = 21573;
-        private const string hostIp = "192.168.1.124";
-        private Client client;
-
         public event PropertyChangedEventHandler PropertyChanged;
         public void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
@@ -36,21 +33,8 @@ namespace NorcusHeaderClientGui
                 return fontCommand;
             }
         }
-        private ICommand orientationCommand;
-        public ICommand OrientationCommand
-        {
-            get
-            {
-                if (orientationCommand != null) { return orientationCommand; }
-
-                orientationCommand = new RelayCommand<object>(
-                    (e) => SwitchSongSeparator(),
-                    (e) => true);
-                return orientationCommand;
-            }
-        }
-
-        public Client Client
+        private NorcusClient client;
+        public NorcusClient Client
         {
             get => client;
             set
@@ -59,19 +43,47 @@ namespace NorcusHeaderClientGui
                 client.PropertyChanged += new PropertyChangedEventHandler(NotifySenderPropertyChanged);
             }
         }
-        public int FontSize { get; set; }
-        public NorcusClientViewModel()
+
+        public string HostIp
         {
-            Client = new Client(hostIp, port);
-            Client.MainLoop();
+            get => Properties.Settings.Default.hostIp;
+            set
+            {
+                Properties.Settings.Default.hostIp = value;
+            }
+        }
+        public int Port
+        {
+            get => Properties.Settings.Default.port;
+            set
+            {
+                Properties.Settings.Default.port = value;
+            }
         }
 
-        private void SwitchSongSeparator()
+        public int FontSize
         {
-            string oldSeparator = Client.SongSeparator;
-            Client.SongSeparator = oldSeparator == " " ? "\n" : " ";
-            Client.MessageLabel = Client.MessageLabel.Replace("," + oldSeparator, "," + Client.SongSeparator);
-            NotifyPropertyChanged(nameof(Client));
+            get => Properties.Settings.Default.fontSize;
+            set
+            {
+                Properties.Settings.Default.fontSize = value;
+                Console.WriteLine(Properties.Settings.Default.fontSize);
+            }
+        }
+        public bool OrientationIsChecked
+        {
+            get => Properties.Settings.Default.vertical;
+            set
+            {
+                Properties.Settings.Default.vertical = value;
+                NotifyPropertyChanged(nameof(Client));
+            }
+        }
+
+        public NorcusClientViewModel()
+        {
+            Client = new NorcusClient(HostIp, Port);
+            Client.RunClient();
         }
     }
 }

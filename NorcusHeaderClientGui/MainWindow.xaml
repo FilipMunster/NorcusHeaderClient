@@ -5,7 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NorcusHeaderClientGui"
         mc:Ignorable="d"
-        Title="NORCUS Header Client" Height="150" Width="350" x:Name="NorcusWindow">
+        Title="NORCUS Header Client" Height="150" Width="350" 
+        x:Name="NorcusWindow"
+        Closing="NorcusWindow_Closing" WindowStyle="ToolWindow">
     <Window.DataContext>
         <local:NorcusClientViewModel/>
     </Window.DataContext>
@@ -17,7 +19,8 @@
             <MenuItem Header="20" Command="{Binding FontCommand}" CommandParameter="20"/>
             <MenuItem Header="24" Command="{Binding FontCommand}" CommandParameter="24"/>
             <MenuItem Header="Orientace:" IsEnabled="False"/>
-            <MenuItem Header="Vertikálně" Command="{Binding OrientationCommand}" IsCheckable="True"/>
+            <MenuItem Header="Vertikálně" IsCheckable="True" IsChecked="{Binding OrientationIsChecked}"/>
+            <MenuItem Header="Nastavení" Click="SettingsMenuItem_Click"/>
         </ContextMenu>
     </Window.ContextMenu>
     <Grid>

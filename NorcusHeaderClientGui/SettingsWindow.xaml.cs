@@ -1,0 +1,66 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+
+namespace NorcusHeaderClientGui
+{
+    /// <summary>
+    /// Interaction logic for SettingsWindow.xaml
+    /// </summary>
+    public partial class SettingsWindow : Window
+    {
+        private const int portDefault = 21573;
+        private const string hostIpDefault = "192.168.1.128";
+        private const string idDefault = "UNKNOWN";
+        public bool Save { get; set; }
+
+        public SettingsWindow()
+        {
+            InitializeComponent();
+            ipTextBox.Text = Properties.Settings.Default.hostIp;
+            portTextBox.Text = Properties.Settings.Default.port.ToString();
+            idTextBox.Text = Properties.Settings.Default.id;
+        }
+
+        private void saveButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IPAddress.TryParse(ipTextBox.Text, out _))
+            {
+                MessageBox.Show("Zadaná IP adresa je neplatná!");
+                return;
+            }
+            Properties.Settings.Default.hostIp = ipTextBox.Text;
+            
+            if (!int.TryParse(portTextBox.Text, out int portInt))
+            {
+                MessageBox.Show("Port musí být celé číslo!");
+                return;
+            }
+            Properties.Settings.Default.port = portInt;
+            Properties.Settings.Default.id = idTextBox.Text;
+            Properties.Settings.Default.Save();
+
+            // Restart aplikace:
+            System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
+            Application.Current.Shutdown();
+        }
+
+        private void defaultButton_Click(object sender, RoutedEventArgs e)
+        {
+            ipTextBox.Text = hostIpDefault;
+            portTextBox.Text = portDefault.ToString();
+            idTextBox.Text = idDefault;
+        }
+    }
+}
