@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{900F3FDA-0FDB-4ADF-9D80-EF25E5A538FB}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>NorcusHeaderClientGui</RootNamespace>
-    <AssemblyName>Norcus Header Client</AssemblyName>
+    <RootNamespace>NorcusSetClient</RootNamespace>
+    <AssemblyName>Norcus Set Client</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -53,10 +53,10 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>A6B3D472BBC8DBA00E7D5BC9C9B3EC3BE8737577</ManifestCertificateThumbprint>
+    <!--<ManifestCertificateThumbprint>A6B3D472BBC8DBA00E7D5BC9C9B3EC3BE8737577</ManifestCertificateThumbprint>-->
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>NorcusHeaderClientGui_TemporaryKey.pfx</ManifestKeyFile>
+    <!--<ManifestKeyFile>NorcusHeaderClientGui_TemporaryKey.pfx</ManifestKeyFile>-->
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -86,6 +86,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="HighlightTermBehavior.cs" />
     <Compile Include="RelayCommand.cs" />
     <Compile Include="SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
@@ -128,7 +129,6 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.config" />
-    <None Include="NorcusHeaderClientGui_TemporaryKey.pfx" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

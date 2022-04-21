@@ -5,9 +5,10 @@ using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Windows.Input;
 
-namespace NorcusHeaderClientGui
+namespace NorcusSetClient
 {
     class NorcusClientViewModel : INotifyPropertyChanged
     {
@@ -67,7 +68,6 @@ namespace NorcusHeaderClientGui
             set
             {
                 Properties.Settings.Default.fontSize = value;
-                Console.WriteLine(Properties.Settings.Default.fontSize);
             }
         }
         public bool OrientationIsChecked
