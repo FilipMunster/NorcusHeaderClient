@@ -72,13 +72,15 @@ namespace NorcusSetClient
             set
             {
                 Properties.Settings.Default.vertical = value;
+                Client.SongSeparator = value ? "\n" : ", ";
                 NotifyPropertyChanged(nameof(Client));
             }
         }
 
         public NorcusClientViewModel()
         {
-            Client = new NorcusClient(HostIp, Port);
+            Client = new NorcusClient(HostIp, Port, Properties.Settings.Default.id);
+            Client.SongSeparator = Properties.Settings.Default.vertical ? "\n" : ", ";
             Client.RunClient();
         }
     }
