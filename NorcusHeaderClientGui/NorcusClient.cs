@@ -190,9 +190,9 @@ namespace NorcusSetClient
         {
             string text = inputText.Trim('@');
 
-            // Pokud vrátil prázdnou sadu, nic nedělej.
+            /// Pokud vrátil prázdnou sadu, vypíšu <see cref="msgEmpty"/>.
             if (text == "SADA")
-                return;
+                text = msgEmpty;
 
             // Pokud jsou poslány noty:
             if (text.StartsWith("noty/"))

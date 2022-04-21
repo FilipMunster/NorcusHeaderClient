@@ -7,20 +7,43 @@
         mc:Ignorable="d"
         Title="NORCUS Set Client 1.0" Height="150" Width="350" 
         x:Name="NorcusWindow"
-        Closing="NorcusWindow_Closing" WindowStyle="ToolWindow">
+        Closing="NorcusWindow_Closing" 
+        WindowStyle="ToolWindow" 
+        Topmost="{Binding AlwaysOnTop}">
     <Window.DataContext>
         <local:NorcusClientViewModel/>
     </Window.DataContext>
+    <Window.Resources>
+        <local:IntToBoolConverter x:Key="IntToBoolConverter"/>
+    </Window.Resources>
     <Window.ContextMenu>
         <ContextMenu>
             <MenuItem Header="Velikost písma:" IsEnabled="False"/>
-            <MenuItem Header="12" Command="{Binding FontCommand}" CommandParameter="12"/>
-            <MenuItem Header="14" Command="{Binding FontCommand}" CommandParameter="14"/>
-            <MenuItem Header="16" Command="{Binding FontCommand}" CommandParameter="16"/>
-            <MenuItem Header="20" Command="{Binding FontCommand}" CommandParameter="20"/>
-            <MenuItem Header="24" Command="{Binding FontCommand}" CommandParameter="24"/>
-            <MenuItem Header="Orientace:" IsEnabled="False"/>
+            <MenuItem 
+                Header="12" 
+                Command="{Binding FontCommand}" CommandParameter="12"
+                IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=12, Mode=OneWay}"/>
+            <MenuItem 
+                Header="14"
+                Command="{Binding FontCommand}" CommandParameter="14"
+                IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=14, Mode=OneWay}"/>
+            <MenuItem 
+                Header="16" 
+                Command="{Binding FontCommand}" CommandParameter="16"
+                IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=16, Mode=OneWay}"/>
+            <MenuItem 
+                Header="20" 
+                Command="{Binding FontCommand}" CommandParameter="20"
+                IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=20, Mode=OneWay}"/>
+            <MenuItem 
+                Header="24" 
+                Command="{Binding FontCommand}" CommandParameter="24"
+                IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=24, Mode=OneWay}"/>
+            <Separator/>
+            <MenuItem Header="Zobrazení:" IsEnabled="False"/>
             <MenuItem Header="Vertikálně" IsCheckable="True" IsChecked="{Binding OrientationIsChecked}"/>
+            <MenuItem Header="Vždy navrchu" IsCheckable="True" IsChecked="{Binding AlwaysOnTop}"/>
+            <Separator/>
             <MenuItem Header="Nastavení" Click="SettingsMenuItem_Click"/>
         </ContextMenu>
     </Window.ContextMenu>

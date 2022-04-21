@@ -44,27 +44,18 @@ namespace NorcusSetClient
         public string HostIp
         {
             get => Properties.Settings.Default.hostIp;
-            set
-            {
-                Properties.Settings.Default.hostIp = value;
-            }
+            set => Properties.Settings.Default.hostIp = value;
         }
         public int Port
         {
             get => Properties.Settings.Default.port;
-            set
-            {
-                Properties.Settings.Default.port = value;
-            }
+            set => Properties.Settings.Default.port = value;
         }
 
         public int FontSize
         {
             get => Properties.Settings.Default.fontSize;
-            set
-            {
-                Properties.Settings.Default.fontSize = value;
-            }
+            set => Properties.Settings.Default.fontSize = value;
         }
         public bool OrientationIsChecked
         {
@@ -74,6 +65,16 @@ namespace NorcusSetClient
                 Properties.Settings.Default.vertical = value;
                 Client.SongSeparator = value ? "\n" : ", ";
                 NotifyPropertyChanged(nameof(Client));
+            }
+        }
+
+        public bool AlwaysOnTop
+        {
+            get => Properties.Settings.Default.alwaysOnTop;
+            set
+            {
+                Properties.Settings.Default.alwaysOnTop = value;
+                NotifyPropertyChanged();
             }
         }
 
