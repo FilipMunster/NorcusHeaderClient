@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
@@ -93,7 +92,8 @@ namespace NorcusSetClient
         /// <returns></returns>
         private async Task ConnectServerAsync()
         {
-            await Task.Run(() => {
+            await Task.Run(() =>
+            {
                 if (!IPAddress.TryParse(hostIp, out IPAddress ipAddress))
                 {
                     ProcessMessage("Zadaná IP adresa " + hostIp + " je neplatná!");
@@ -131,14 +131,14 @@ namespace NorcusSetClient
             // Nastane, pokud byla zadaná neplatná IP adresa:
             if (socket is null)
                 return;
-            
+
             ProcessMessage(msgEmpty);
             int bytesRec;
 
             await Task.Run(async () =>
             {
                 while (true)
-                {                    
+                {
                     try
                     {
                         socket.Send(dummy);
@@ -164,7 +164,7 @@ namespace NorcusSetClient
                     socket.Send(id);
                 }
             });
-               
+
         }
         /// <summary>
         /// Zpracování přijaté zprávy
@@ -177,7 +177,7 @@ namespace NorcusSetClient
             // Pokud vrátil prázdnou sadu, nic nedělej.
             if (text == "SADA")
                 return;
-                        
+
             // Pokud jsou poslány noty:
             if (text.StartsWith("noty/"))
             {
@@ -188,9 +188,9 @@ namespace NorcusSetClient
 
             // Pokud je poslána sada:
             if (text.StartsWith("SADA"))
-            {                
+            {
                 text = text.Substring(5, text.Length - 6); // Odstranění textu SADA a prvního a posledního apostrofu
-            }                
+            }
 
             setList = text.Split(new string[] { "', '" }, StringSplitOptions.RemoveEmptyEntries);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Message)));
@@ -254,7 +254,7 @@ namespace NorcusSetClient
 
             if (currentSongIndex < 0)
                 return "";
-            
+
             return setList[currentSongIndex];
         }
     }

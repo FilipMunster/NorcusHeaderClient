@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Net;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
 using System.Windows.Input;
 
 namespace NorcusSetClient
@@ -23,11 +18,12 @@ namespace NorcusSetClient
         }
 
         private ICommand fontCommand;
-        public ICommand FontCommand {
+        public ICommand FontCommand
+        {
             get
             {
                 if (fontCommand != null) { return fontCommand; }
-                
+
                 fontCommand = new RelayCommand<string>(
                     (e) => { FontSize = Convert.ToInt32(e); NotifyPropertyChanged(nameof(FontSize)); },
                     (e) => true);
