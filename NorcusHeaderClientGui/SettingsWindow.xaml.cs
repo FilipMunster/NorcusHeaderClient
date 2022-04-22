@@ -35,6 +35,13 @@ namespace NorcusSetClient
                 MessageBox.Show("Port musí být celé číslo!");
                 return;
             }
+
+            if (idTextBox.Text.Length > 1024)
+            {
+                MessageBox.Show("ID je příliš dlouhé!");
+                return;
+            }
+
             Properties.Settings.Default.port = portInt;
             Properties.Settings.Default.id = idTextBox.Text;
             Properties.Settings.Default.Save();

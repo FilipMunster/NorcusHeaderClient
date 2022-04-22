@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -111,6 +112,7 @@ namespace NorcusSetClient
         {
             await Task.Run(() =>
             {
+                WriteToConsole("ConnectServerAsync -> connecting to server");
                 if (!IPAddress.TryParse(hostIp, out IPAddress ipAddress))
                 {
                     ProcessMessage("Zadaná IP adresa " + hostIp + " je neplatná!");
@@ -125,13 +127,15 @@ namespace NorcusSetClient
                     try
                     {
                         socket.Connect(endPoint);
+                        WriteToConsole("ConnectServerAsync -> socket connected");
                     }
                     catch
                     {
                         Thread.Sleep(1000);
                         continue;
                     }
-                    socket.Send(id);
+                    int bytesSent = socket.Send(id);
+                    WriteToConsole("ConnectServerAsync -> SENT " + bytesSent + " bytes");
                     break;
                 }
             });
@@ -161,17 +165,20 @@ namespace NorcusSetClient
                         try
                         {
                             socket.Send(dummy);
-                            Console.WriteLine("poslán dummy");
+                            WriteToConsole("RunClient() -> SENT dummy");
                             bytesRec = socket.Receive(buffer);
-                            Console.WriteLine("přijata odpověď");
+                            WriteToConsole("RunClient() -> RECEIVED " + bytesRec + " bytes");
+                            WriteToConsole("RECEIVED MESSAGE: " + Encoding.UTF8.GetString(buffer, 0, bytesRec).Trim('@'));
                         }
                         catch
                         {
+                            WriteToConsole("RunClient() -> Task exception thrown");
                             ProcessMessage(msgNoServer);
                             try
                             {
                                 socket.Shutdown(SocketShutdown.Both);
                                 socket.Close();
+                                WriteToConsole("RunClient() -> socket closed");
                             }
                             catch { }
                             await ConnectServerAsync();
@@ -182,7 +189,8 @@ namespace NorcusSetClient
                         ProcessMessage(Encoding.UTF8.GetString(buffer, 0, bytesRec));
 
                         // Poslat serveru v odpovědi moje id
-                        socket.Send(id);
+                        int bytesSent = socket.Send(id);
+                        WriteToConsole("RunClient() -> SENT " + bytesSent + " bytes");
                     }
                 });
             }
@@ -191,19 +199,22 @@ namespace NorcusSetClient
                 ProcessMessage(msgErrorServer);
                 SocketClose();
                 await Task.Run(() => Thread.Sleep(1000));
+                WriteToConsole("RESTARTING APPLICATION");
                 System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
                 Application.Current.Shutdown();
             }
         }
 
+        /// <summary>
+        /// Shuts down and closes <see cref="socket"/> if is bound
+        /// </summary>
         public void SocketClose()
         {
             if (socket.IsBound)
             {
                 socket.Shutdown(SocketShutdown.Both);
                 socket.Close();
-                Console.WriteLine("Socket closed");
-                MessageBox.Show("Socket closed");
+                WriteToConsole("SocketClose() -> socket closed");
             }
         }
 
@@ -302,5 +313,17 @@ namespace NorcusSetClient
 
             return SetList[currentSongIndex];
         }
+
+        /// <summary>
+        /// Vypíše zprávu do konzole. Když je aplikace spuštěna z příkazové řádky, vypisuje do ní.
+        /// </summary>
+        /// <param name="message"></param>
+        public void WriteToConsole(string message)
+        {
+            AttachConsole(-1);
+            Console.WriteLine(message);
+        }
+        [DllImport("Kernel32.dll")]
+        public static extern bool AttachConsole(int processId);
     }
 }

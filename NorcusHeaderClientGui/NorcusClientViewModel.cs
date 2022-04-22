@@ -42,7 +42,6 @@ namespace NorcusSetClient
                 restartCommand = new RelayCommand<string>(
                     (e) => 
                     {
-                        Client.SocketClose();
                         System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
                         Application.Current.Shutdown(); 
                     },
@@ -50,6 +49,7 @@ namespace NorcusSetClient
                 return restartCommand;
             }
         }
+
         private NorcusClient client;
         public NorcusClient Client
         {

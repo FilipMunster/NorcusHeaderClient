@@ -10,6 +10,7 @@ namespace NorcusSetClient
         public MainWindow()
         {
             InitializeComponent();
+
             var props = Properties.Settings.Default;
             NorcusWindow.Height = props.windowHeight;
             NorcusWindow.Width = props.windowWidth;
@@ -19,6 +20,8 @@ namespace NorcusSetClient
 
         private void NorcusWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            ((NorcusClientViewModel)DataContext).Client.SocketClose();
+
             var props = Properties.Settings.Default;
             props.windowHeight = NorcusWindow.Height;
             props.windowWidth = NorcusWindow.Width;
@@ -34,6 +37,7 @@ namespace NorcusSetClient
             settingsWindow.Top = NorcusWindow.Top + 10;
             settingsWindow.Left = NorcusWindow.Left + 10;
             settingsWindow.Show();
+            
         }
     }
 }
