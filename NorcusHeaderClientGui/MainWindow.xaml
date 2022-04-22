@@ -44,6 +44,7 @@
             <MenuItem Header="Vertikálně" IsCheckable="True" IsChecked="{Binding OrientationIsChecked}"/>
             <MenuItem Header="Vždy navrchu" IsCheckable="True" IsChecked="{Binding AlwaysOnTop}"/>
             <Separator/>
+            <MenuItem Header="Restarovat klienta" Command="{Binding RestartCommand}"/>
             <MenuItem Header="Nastavení" Click="SettingsMenuItem_Click"/>
         </ContextMenu>
     </Window.ContextMenu>

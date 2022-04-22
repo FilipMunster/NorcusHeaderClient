@@ -39,7 +39,7 @@ namespace NorcusSetClient
             Properties.Settings.Default.id = idTextBox.Text;
             Properties.Settings.Default.Save();
 
-            // Restart aplikace:
+            // Restart aplikace:            
             System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
             Application.Current.Shutdown();
         }

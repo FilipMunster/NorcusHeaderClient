@@ -6,13 +6,15 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace NorcusSetClient
 {
     public class NorcusClient : INotifyPropertyChanged
     {
-        private const string msgEmpty = "NENÍ VYBRÁNA ŽÁDNÁ PÍSNIČKA";
-        private const string msgNoServer = "SERVER NEDOSTUPNÝ!\nVYHLEDÁVÁM SPOJENÍ...";
+        public const string msgEmpty = "NENÍ VYBRÁNA ŽÁDNÁ PÍSNIČKA";
+        public const string msgNoServer = "SERVER NEDOSTUPNÝ! VYHLEDÁVÁM SPOJENÍ...";
+        public const string msgErrorServer = "CHYBA V KOMUNIKACI SE SERVEREM! RESTARTUJI KLIENTA...";
 
         private const int buffsize = 1024;
         private byte[] buffer = new byte[buffsize];
@@ -150,36 +152,59 @@ namespace NorcusSetClient
             ProcessMessage(msgEmpty);
             int bytesRec;
 
-            await Task.Run(async () =>
+            try
             {
-                while (true)
+                await Task.Run(async () =>
                 {
-                    try
+                    while (true)
                     {
-                        socket.Send(dummy);
-                        bytesRec = socket.Receive(buffer);
-                    }
-                    catch
-                    {
-                        ProcessMessage(msgNoServer);
                         try
                         {
-                            socket.Shutdown(SocketShutdown.Both);
-                            socket.Close();
+                            socket.Send(dummy);
+                            Console.WriteLine("poslán dummy");
+                            bytesRec = socket.Receive(buffer);
+                            Console.WriteLine("přijata odpověď");
                         }
-                        catch { }
-                        await ConnectServerAsync();
-                        ProcessMessage(msgEmpty);
-                        continue;
+                        catch
+                        {
+                            ProcessMessage(msgNoServer);
+                            try
+                            {
+                                socket.Shutdown(SocketShutdown.Both);
+                                socket.Close();
+                            }
+                            catch { }
+                            await ConnectServerAsync();
+                            ProcessMessage(msgEmpty);
+                            continue;
+                        }
+
+                        ProcessMessage(Encoding.UTF8.GetString(buffer, 0, bytesRec));
+
+                        // Poslat serveru v odpovědi moje id
+                        socket.Send(id);
                     }
+                });
+            }
+            catch
+            {
+                ProcessMessage(msgErrorServer);
+                SocketClose();
+                await Task.Run(() => Thread.Sleep(1000));
+                System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
+                Application.Current.Shutdown();
+            }
+        }
 
-                    ProcessMessage(Encoding.UTF8.GetString(buffer, 0, bytesRec));
-
-                    // Poslat serveru v odpovědi moje id
-                    socket.Send(id);
-                }
-            });
-
+        public void SocketClose()
+        {
+            if (socket.IsBound)
+            {
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Close();
+                Console.WriteLine("Socket closed");
+                MessageBox.Show("Socket closed");
+            }
         }
 
         /// <summary>
@@ -218,7 +243,7 @@ namespace NorcusSetClient
         /// <returns>Název písničky zobrazený v <see cref="Message"/></returns>
         private string GetCurrentSong()
         {
-            if (FileName is null || FileName == "" || 
+            if (FileName is null || FileName == "" ||
                 SetList is null || SetList[0] == msgEmpty || SetList[0] == msgNoServer)
                 return "";
 

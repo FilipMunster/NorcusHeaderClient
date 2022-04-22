@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using System.Windows;
 
 namespace NorcusSetClient
 {
@@ -28,6 +29,25 @@ namespace NorcusSetClient
                     (e) => { FontSize = Convert.ToInt32(e); NotifyPropertyChanged(nameof(FontSize)); },
                     (e) => true);
                 return fontCommand;
+            }
+        }
+
+        private ICommand restartCommand;
+        public ICommand RestartCommand
+        {
+            get
+            {
+                if (restartCommand != null) { return restartCommand; }
+
+                restartCommand = new RelayCommand<string>(
+                    (e) => 
+                    {
+                        Client.SocketClose();
+                        System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
+                        Application.Current.Shutdown(); 
+                    },
+                    (e) => true);
+                return restartCommand;
             }
         }
         private NorcusClient client;
