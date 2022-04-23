@@ -20,7 +20,9 @@ namespace NorcusSetClient
 
         private void NorcusWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            ((NorcusClientViewModel)DataContext).Client.SocketClose();
+            NorcusClientViewModel vm = (NorcusClientViewModel)DataContext;
+            vm.Client.SocketClose();
+            vm.Client.Logger?.Save();
 
             var props = Properties.Settings.Default;
             props.windowHeight = NorcusWindow.Height;
@@ -36,8 +38,7 @@ namespace NorcusSetClient
             SettingsWindow settingsWindow = new SettingsWindow();
             settingsWindow.Top = NorcusWindow.Top + 10;
             settingsWindow.Left = NorcusWindow.Left + 10;
-            settingsWindow.Show();
-            
+            settingsWindow.Show();            
         }
     }
 }

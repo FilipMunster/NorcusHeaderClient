@@ -15,17 +15,16 @@ namespace NorcusSetClient
     {
         public const string msgEmpty = "NENÍ VYBRÁNA ŽÁDNÁ PÍSNIČKA";
         public const string msgNoServer = "SERVER NEDOSTUPNÝ! VYHLEDÁVÁM SPOJENÍ...";
-        public const string msgErrorServer = "CHYBA V KOMUNIKACI SE SERVEREM! RESTARTUJI KLIENTA...";
 
         private const int buffsize = 1024;
         private byte[] buffer = new byte[buffsize];
         private readonly byte[] dummy;
+        private Random random = new Random();
 
         private readonly byte[] id;
         private readonly string hostIp;
         private readonly int port;
         private Socket socket;
-        private IPEndPoint endPoint;
 
         /// <summary>
         /// Create new NorcusClient instance
@@ -102,6 +101,9 @@ namespace NorcusSetClient
         /// </summary>
         public string SongSeparator { get; set; }
 
+        public Logger Logger { get; set; }
+
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
@@ -119,23 +121,26 @@ namespace NorcusSetClient
                     return;
                 }
 
-                endPoint = new IPEndPoint(ipAddress, port);
                 socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
+                int tryCount = 0;
                 while (true)
                 {
                     try
                     {
-                        socket.Connect(endPoint);
-                        WriteToConsole("ConnectServerAsync -> socket connected");
+                        tryCount++;
+                        socket.Connect(ipAddress, port);
+                        WriteToConsole("ConnectServerAsync -> socket connected (try #" + tryCount + ")");
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        WriteToConsole("ConnectServerAsync -> socket connect failed (try #" + tryCount + ")\n\t" +
+                            "Exception: " + ex.Message);
                         Thread.Sleep(1000);
                         continue;
                     }
-                    int bytesSent = socket.Send(id);
-                    WriteToConsole("ConnectServerAsync -> SENT " + bytesSent + " bytes");
+                    _ = socket.Send(id);
+                    WriteToConsole("ConnectServerAsync -> SENT my id  (" + Encoding.ASCII.GetString(id) + ")");
                     break;
                 }
             });
@@ -165,43 +170,40 @@ namespace NorcusSetClient
                         try
                         {
                             socket.Send(dummy);
-                            WriteToConsole("RunClient() -> SENT dummy");
+                            WriteToConsole("RunClient -> SENT dummy");
+
                             bytesRec = socket.Receive(buffer);
-                            WriteToConsole("RunClient() -> RECEIVED " + bytesRec + " bytes");
-                            WriteToConsole("RECEIVED MESSAGE: " + Encoding.UTF8.GetString(buffer, 0, bytesRec).Trim('@'));
-                        }
-                        catch
-                        {
-                            WriteToConsole("RunClient() -> Task exception thrown");
-                            ProcessMessage(msgNoServer);
-                            try
+                            WriteToConsole("RunClient -> RECEIVED " + bytesRec + " bytes");
+                            WriteToConsole("\tMESSAGE: " + Encoding.UTF8.GetString(buffer, 0, bytesRec).Trim('@'));
+
+                            _ = socket.Send(id); // Poslat serveru v odpovědi moje id
+                            WriteToConsole("RunClient -> SENT my id (" + Encoding.ASCII.GetString(id) + ")");
+
+                            if (bytesRec == 0)
                             {
-                                socket.Shutdown(SocketShutdown.Both);
-                                socket.Close();
-                                WriteToConsole("RunClient() -> socket closed");
+                                int delay = 1000 + random.Next(1000);
+                                WriteToConsole("Sleep " + delay + "ms before continuing.");
+                                Thread.Sleep(delay);
                             }
-                            catch { }
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteToConsole("RunClient -> Exception thrown" +
+                                "\n\tException: " + ex.Message);
+                            ProcessMessage(msgNoServer);
+                            SocketClose();
                             await ConnectServerAsync();
                             ProcessMessage(msgEmpty);
                             continue;
                         }
 
                         ProcessMessage(Encoding.UTF8.GetString(buffer, 0, bytesRec));
-
-                        // Poslat serveru v odpovědi moje id
-                        int bytesSent = socket.Send(id);
-                        WriteToConsole("RunClient() -> SENT " + bytesSent + " bytes");
                     }
                 });
             }
-            catch
+            catch (Exception ex)
             {
-                ProcessMessage(msgErrorServer);
-                SocketClose();
-                await Task.Run(() => Thread.Sleep(1000));
-                WriteToConsole("RESTARTING APPLICATION");
-                System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
-                Application.Current.Shutdown();
+                throw ex;
             }
         }
 
@@ -210,12 +212,25 @@ namespace NorcusSetClient
         /// </summary>
         public void SocketClose()
         {
-            if (socket.IsBound)
+            try
             {
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Close();
-                WriteToConsole("SocketClose() -> socket closed");
+                if (socket.IsBound)
+                {
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Close();
+                    WriteToConsole("SocketClose -> socket closed");
+                }
+                else
+                {
+                    WriteToConsole("SocketClose -> socket was already closed!");
+                }
             }
+            catch (Exception e)
+            {
+                WriteToConsole("SocketClose -> Exception thrown" +
+                    "\n\tException: " + e.Message);
+            }
+            
         }
 
         /// <summary>
@@ -227,8 +242,11 @@ namespace NorcusSetClient
             string text = inputText.Trim('@');
 
             /// Pokud vrátil prázdnou sadu, vypíšu <see cref="msgEmpty"/>.
-            if (text == "SADA")
+            if (text == "SADA" || text == "")
+            {
                 text = msgEmpty;
+                FileName = "";
+            }
 
             // Pokud jsou poslány noty:
             if (text.StartsWith("noty/"))
@@ -242,6 +260,7 @@ namespace NorcusSetClient
             if (text.StartsWith("SADA"))
             {
                 text = text.Substring(5, text.Length - 6); // Odstranění textu SADA a prvního a posledního apostrofu
+                FileName = "";
             }
 
             SetList = text.Split(new string[] { "', '" }, StringSplitOptions.RemoveEmptyEntries);
@@ -315,13 +334,14 @@ namespace NorcusSetClient
         }
 
         /// <summary>
-        /// Vypíše zprávu do konzole. Když je aplikace spuštěna z příkazové řádky, vypisuje do ní.
+        /// Vypíše zprávu do konzole a do logovacího souboru. Když je aplikace spuštěna z příkazové řádky, vypisuje i do ní.
         /// </summary>
         /// <param name="message"></param>
         public void WriteToConsole(string message)
         {
             AttachConsole(-1);
             Console.WriteLine(message);
+            Logger?.Log(message);
         }
         [DllImport("Kernel32.dll")]
         public static extern bool AttachConsole(int processId);

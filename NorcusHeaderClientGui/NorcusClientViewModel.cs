@@ -103,6 +103,13 @@ namespace NorcusSetClient
             Client = new NorcusClient(HostIp, Port, Properties.Settings.Default.id);
             Client.SongSeparator = Properties.Settings.Default.vertical ? "\n" : ", ";
             Client.RunClient();
+
+            if (Properties.Settings.Default.logging)
+            {
+                Client.Logger = new Logger();
+            }
+
+            //Client.ShoditServer();
         }
     }
 }

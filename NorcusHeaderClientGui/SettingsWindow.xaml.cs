@@ -11,7 +11,6 @@ namespace NorcusSetClient
         private const int portDefault = 21573;
         private const string hostIpDefault = "192.168.1.128";
         private const string idDefault = "UNKNOWN";
-        public bool Save { get; set; }
 
         public SettingsWindow()
         {
@@ -19,6 +18,7 @@ namespace NorcusSetClient
             ipTextBox.Text = Properties.Settings.Default.hostIp;
             portTextBox.Text = Properties.Settings.Default.port.ToString();
             idTextBox.Text = Properties.Settings.Default.id;
+            logCheckBox.IsChecked = Properties.Settings.Default.logging;
         }
 
         private void saveButton_Click(object sender, RoutedEventArgs e)
@@ -44,6 +44,7 @@ namespace NorcusSetClient
 
             Properties.Settings.Default.port = portInt;
             Properties.Settings.Default.id = idTextBox.Text;
+            Properties.Settings.Default.logging = (bool)logCheckBox.IsChecked;
             Properties.Settings.Default.Save();
 
             // Restart aplikace:            

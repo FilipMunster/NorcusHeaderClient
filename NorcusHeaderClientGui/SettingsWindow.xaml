@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NorcusSetClient"
         mc:Ignorable="d"
-        Title="Nastavení" Height="170" Width="200" 
+        Title="Nastavení" Height="200" Width="200" 
         WindowStyle="ToolWindow"
         Topmost="True">
     <Grid>
@@ -22,6 +22,7 @@
                 <TextBlock Text="ID: "/>
                 <TextBox x:Name="idTextBox" Width="100"/>
             </StackPanel>
+            <CheckBox Content="Logování" Margin="5" x:Name="logCheckBox"/>
             <Button x:Name="saveButton" Content="Uložit a zavřít" Margin="5, 10, 5, 5" Click="saveButton_Click"/>
             <Button x:Name="defaultButton" Content="Výchozí hodnoty" Margin="5, 0, 5, 5" Click="defaultButton_Click"/>
         </StackPanel>

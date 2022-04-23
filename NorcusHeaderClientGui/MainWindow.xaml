@@ -18,27 +18,28 @@
     </Window.Resources>
     <Window.ContextMenu>
         <ContextMenu>
-            <MenuItem Header="Velikost písma:" IsEnabled="False"/>
-            <MenuItem 
-                Header="12" 
-                Command="{Binding FontCommand}" CommandParameter="12"
-                IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=12, Mode=OneWay}"/>
-            <MenuItem 
-                Header="14"
-                Command="{Binding FontCommand}" CommandParameter="14"
-                IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=14, Mode=OneWay}"/>
-            <MenuItem 
-                Header="16" 
-                Command="{Binding FontCommand}" CommandParameter="16"
-                IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=16, Mode=OneWay}"/>
-            <MenuItem 
-                Header="20" 
-                Command="{Binding FontCommand}" CommandParameter="20"
-                IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=20, Mode=OneWay}"/>
-            <MenuItem 
-                Header="24" 
-                Command="{Binding FontCommand}" CommandParameter="24"
-                IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=24, Mode=OneWay}"/>
+            <MenuItem Header="Velikost písma">
+                <MenuItem 
+                    Header="12" 
+                    Command="{Binding FontCommand}" CommandParameter="12"
+                    IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=12, Mode=OneWay}"/>
+                <MenuItem 
+                    Header="14"
+                    Command="{Binding FontCommand}" CommandParameter="14"
+                    IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=14, Mode=OneWay}"/>
+                <MenuItem 
+                    Header="16" 
+                    Command="{Binding FontCommand}" CommandParameter="16"
+                    IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=16, Mode=OneWay}"/>
+                <MenuItem 
+                    Header="20" 
+                    Command="{Binding FontCommand}" CommandParameter="20"
+                    IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=20, Mode=OneWay}"/>
+                <MenuItem 
+                    Header="24" 
+                    Command="{Binding FontCommand}" CommandParameter="24"
+                    IsChecked="{Binding FontSize, Converter={StaticResource IntToBoolConverter}, ConverterParameter=24, Mode=OneWay}"/>
+            </MenuItem>            
             <Separator/>
             <MenuItem Header="Zobrazení:" IsEnabled="False"/>
             <MenuItem Header="Vertikálně" IsCheckable="True" IsChecked="{Binding OrientationIsChecked}"/>
