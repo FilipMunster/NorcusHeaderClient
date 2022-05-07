@@ -3,19 +3,18 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using System.Windows;
+using Microsoft.Win32;
 
 namespace NorcusSetClient
 {
     class NorcusClientViewModel : INotifyPropertyChanged
     {
+        private readonly string databaseFile = System.IO.Path.GetDirectoryName(
+            Application.ResourceAssembly.Location) + "\\NorcusDatabase.xml";
         public event PropertyChangedEventHandler PropertyChanged;
         public void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-        private void NotifySenderPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(sender.GetType().Name));
         }
 
         private ICommand fontCommand;
@@ -50,16 +49,8 @@ namespace NorcusSetClient
             }
         }
 
-        private NorcusClient client;
-        public NorcusClient Client
-        {
-            get => client;
-            set
-            {
-                client = value;
-                client.PropertyChanged += new PropertyChangedEventHandler(NotifySenderPropertyChanged);
-            }
-        }
+        public NorcusClient Client { get; private set; }
+        public Database Database { get; set; }
 
         public string HostIp
         {
@@ -77,16 +68,6 @@ namespace NorcusSetClient
             get => Properties.Settings.Default.fontSize;
             set => Properties.Settings.Default.fontSize = value;
         }
-        public bool OrientationIsChecked
-        {
-            get => Properties.Settings.Default.vertical;
-            set
-            {
-                Properties.Settings.Default.vertical = value;
-                Client.SongSeparator = value ? "\n" : ", ";
-                NotifyPropertyChanged(nameof(Client));
-            }
-        }
 
         public bool AlwaysOnTop
         {
@@ -98,10 +79,29 @@ namespace NorcusSetClient
             }
         }
 
+        public string[] SetList
+        {
+            //get
+            //{
+            //    if (Client.SetList is null)
+            //        return new string[] { Client.Message };
+            //    return Client.SetList;
+            //}
+            get 
+            {
+                return new string[] { "První písnička", "Druhá písnička", "Třetí písnička",
+                "První písnička", "Druhá písnička", "Třetí písnička"};
+            }
+        }
+        public int SongIndex => 1;// Client.CurrentSongIndex;
+
         public NorcusClientViewModel()
         {
+            Database = new Database();
+            Database.Load(databaseFile);
+
             Client = new NorcusClient(HostIp, Port, Properties.Settings.Default.id);
-            Client.SongSeparator = Properties.Settings.Default.vertical ? "\n" : ", ";
+            Client.SelectionChanged += Client_SelectionChanged;
             Client.RunClient();
 
             if (Properties.Settings.Default.logging)
@@ -109,7 +109,25 @@ namespace NorcusSetClient
                 Client.Logger = new Logger();
             }
 
-            //Client.ShoditServer();
+            SystemEvents.PowerModeChanged += SystemEvents_PowerModeChanged;
         }
+
+        private void Client_SelectionChanged(object sender, NorcusClient.SelectionChangedEventArgs e)
+        {
+            NotifyPropertyChanged(nameof(SetList));
+            NotifyPropertyChanged(nameof(SongIndex));
+        }
+
+        private void SystemEvents_PowerModeChanged(object sender, PowerModeChangedEventArgs e)
+        {
+            if (e.Mode == PowerModes.Resume)
+            {
+                Client.Logger.Log("System resumed from suspended state. Restarting application...");
+                // Restart aplikace:            
+                System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
+                Application.Current.Shutdown();
+            }
+        }
+
     }
 }

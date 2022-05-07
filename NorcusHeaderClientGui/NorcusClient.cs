@@ -11,13 +11,13 @@ using System.Windows;
 
 namespace NorcusSetClient
 {
-    public class NorcusClient : INotifyPropertyChanged
+    public class NorcusClient
     {
         public const string msgEmpty = "NENÍ VYBRÁNA ŽÁDNÁ PÍSNIČKA";
         public const string msgNoServer = "SERVER NEDOSTUPNÝ! VYHLEDÁVÁM SPOJENÍ...";
 
         private const int buffsize = 1024;
-        private byte[] buffer = new byte[buffsize];
+        private readonly byte[] buffer = new byte[buffsize];
         private readonly byte[] dummy;
         private Random random = new Random();
 
@@ -55,57 +55,44 @@ namespace NorcusSetClient
         /// <summary>
         /// Název aktuálně zobrazeného souboru vč. přípony, bez cesty
         /// </summary>
-        public string FileName { get; private set; }
+        public string CurrentFileName { get; private set; } = String.Empty;
 
         /// <summary>
         /// Zobrazený text v okně
         /// </summary>
-        public string Message
-        {
-            get
-            {
-                string msg = String.Join("{@}", SetList);
-
-                // Pokud zobrazuji na řádku, nahradím mezery mezi slovy nedělitelnými mezerami,
-                // ať není žádná položka přes 2 řádky.
-                if (!SongSeparator.Contains("\n"))
-                    msg = msg.Replace(" ", "\u00a0");
-
-                return msg.Replace("{@}", SongSeparator);
-            }
-        }
+        public string Message { get; private set; } = String.Empty;
 
         /// <summary>
         /// Aktuálně zobrazená písnička
         /// </summary>
-        public string CurrentSong
-        {
-            get
-            {
-                string currentSong = GetCurrentSong();
-                // Pokud zobrazuji na řádku, nahradím mezery mezi slovy nedělitelnými mezerami,
-                // ať není žádná položka přes 2 řádky.
-                if (!SongSeparator.Contains("\n"))
-                    currentSong = currentSong.Replace(" ", "\u00a0");
-                return currentSong;
-            }
-        }
+        public string CurrentSongTitle => GetCurrentSong();
 
         /// <summary>
         /// Pořadí vybrané písničky v sadě
         /// </summary>
-        public int CurrentSongIndex { get; private set; }
-
-        /// <summary>
-        /// Oddělovač mezi položkami v sadě
-        /// </summary>
-        public string SongSeparator { get; set; }
+        public int CurrentSongIndex
+        {
+            get
+            {
+                if (SetList is null)
+                    return -1;
+                return SetList.ToList().IndexOf(CurrentSongTitle);
+            }
+        }
 
         public Logger Logger { get; set; }
 
+        public delegate void SelectionChangedEventHandler(object sender, SelectionChangedEventArgs e);
+        public event SelectionChangedEventHandler SelectionChanged;
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
+        public enum NorcusAction
+        {
+            SongChanged,
+            SetChanged,
+            SetEmpied,
+            SetStarted,
+            StatusMessage
+        }
         /// <summary>
         /// Provede připojení k serveru
         /// </summary>
@@ -181,7 +168,7 @@ namespace NorcusSetClient
 
                             if (bytesRec == 0)
                             {
-                                int delay = 1000 + random.Next(1000);
+                                int delay = 1000 + random.Next(2000);
                                 WriteToConsole("Sleep " + delay + "ms before continuing.");
                                 Thread.Sleep(delay);
                             }
@@ -208,7 +195,7 @@ namespace NorcusSetClient
         }
 
         /// <summary>
-        /// Shuts down and closes <see cref="socket"/> if is bound
+        /// Shuts down and closes <see cref="socket"/> if it's bound
         /// </summary>
         public void SocketClose()
         {
@@ -244,37 +231,55 @@ namespace NorcusSetClient
             /// Pokud vrátil prázdnou sadu, vypíšu <see cref="msgEmpty"/>.
             if (text == "SADA" || text == "")
             {
-                text = msgEmpty;
-                FileName = "";
+                Message = msgEmpty;
+
+                NorcusAction action = NorcusAction.SetChanged;
+                if (CurrentFileName != String.Empty)
+                    action = NorcusAction.SetEmpied;
+                
+                CurrentFileName = String.Empty;
+                SetList = null;
+                SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(this, action));
+                return;
             }
 
             // Pokud jsou poslány noty:
             if (text.StartsWith("noty/"))
             {
-                FileName = text.Substring(5);
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentSong)));
+                Message = String.Empty;
+
+                NorcusAction action = NorcusAction.SongChanged;
+                if (CurrentFileName == String.Empty)
+                    action = NorcusAction.SetStarted;
+
+                CurrentFileName = text.Substring(5);
+                SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(this, action));
                 return;
             }
 
             // Pokud je poslána sada:
             if (text.StartsWith("SADA"))
             {
+                Message = String.Empty;
                 text = text.Substring(5, text.Length - 6); // Odstranění textu SADA a prvního a posledního apostrofu
-                FileName = "";
+                SetList = text.Split(new string[] { "', '" }, StringSplitOptions.RemoveEmptyEntries);
+                SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(this, NorcusAction.SetChanged));
+                return;
             }
 
-            SetList = text.Split(new string[] { "', '" }, StringSplitOptions.RemoveEmptyEntries);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Message)));
+            Message = text;
+            CurrentFileName = String.Empty;
+            SetList = null;
+            SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(this, NorcusAction.StatusMessage));
         }
 
         /// <summary>
-        /// Vrátí zobrazený název aktuální písničky na základě <see cref="FileName"/>
+        /// Vrátí zobrazený název aktuální písničky na základě <see cref="CurrentFileName"/>
         /// </summary>
-        /// <returns>Název písničky zobrazený v <see cref="Message"/></returns>
+        /// <returns>Název zobrazené písničky</returns>
         private string GetCurrentSong()
         {
-            if (FileName is null || FileName == "" ||
-                SetList is null || SetList[0] == msgEmpty || SetList[0] == msgNoServer)
+            if (CurrentFileName == "" || SetList is null)
                 return "";
 
             // Převedení seznam písniček do podoby, která odpovídá názvům souborů v databázi.
@@ -297,8 +302,8 @@ namespace NorcusSetClient
             }
 
             // Izolace názvu písničky z názvu souboru:
-            int separatorIndex = FileName.IndexOfAny(new char[] { '-', '.' }); // hledám i tečku pro případy, kdy není v názvu zadán intepret
-            string currentSong = FileName.Substring(0, separatorIndex).ToLower();
+            int separatorIndex = CurrentFileName.IndexOfAny(new char[] { '-', '.' }); // hledám i tečku pro případy, kdy není v názvu zadán intepret
+            string currentSong = CurrentFileName.Substring(0, separatorIndex).ToLower();
 
             // Nalezení indexu zobrazené písničky:
             int currentSongIndex = -1;
@@ -317,15 +322,13 @@ namespace NorcusSetClient
                 for (int i = 0; i < SetList.Length; i++)
                 {
                     string firstWord = setListMod[i].Split('_')[0];
-                    if (FileName.ToLower().Contains(firstWord))
+                    if (CurrentFileName.ToLower().Contains(firstWord))
                     {
                         currentSongIndex = i;
                         break;
                     }
                 }
             }
-
-            CurrentSongIndex = currentSongIndex;
 
             if (currentSongIndex < 0)
                 return "";
@@ -345,5 +348,25 @@ namespace NorcusSetClient
         }
         [DllImport("Kernel32.dll")]
         public static extern bool AttachConsole(int processId);
+
+        public class SelectionChangedEventArgs
+        {
+            public SelectionChangedEventArgs(NorcusClient client, NorcusAction action)
+            {
+                this.SetList = client.SetList;
+                this.CurrentFileName = client.CurrentFileName;
+                this.Message = client.Message;
+                this.CurrentSongIndex = client.CurrentSongIndex;
+                this.CurrentSongTitle = client.CurrentSongTitle;
+                this.NorcusAction = action;
+            }
+            public string[] SetList { get; }
+            public string CurrentFileName { get; }
+            public string Message { get; }
+            public int CurrentSongIndex { get; }
+            public string CurrentSongTitle { get; }
+            public NorcusAction NorcusAction { get; }
+        }
+
     }
 }
