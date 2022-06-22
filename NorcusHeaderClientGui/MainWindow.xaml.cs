@@ -23,6 +23,7 @@ namespace NorcusSetClient
             NorcusClientViewModel vm = (NorcusClientViewModel)DataContext;
             vm.Client.SocketClose();
             vm.Client.Logger?.Save();
+            vm.Database.Save();
 
             var props = Properties.Settings.Default;
             props.windowHeight = NorcusWindow.Height;

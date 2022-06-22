@@ -8,11 +8,19 @@ namespace NorcusSetClient
 {
     public class Database
     {
+        private readonly string dbFile;
         public Database() { }
+        public Database(string databaseFileName)
+        {
+            dbFile = databaseFileName;
+        }
         public List<Song> Songs { get; set; } = new List<Song>();
         
-        public bool Load(string fileName)
+        public bool Load(string fileName = "")
         {
+            if (fileName == "")
+                fileName = dbFile;
+
             System.Xml.Serialization.XmlSerializer serializer = 
                 new System.Xml.Serialization.XmlSerializer(typeof(Database));
             
@@ -36,8 +44,11 @@ namespace NorcusSetClient
             Songs = new List<Song>(database.Songs);
             return true;
         }
-        public void Save(string fileName)
+        public void Save(string fileName = "")
         {
+            if (fileName == "")
+                fileName = dbFile;
+
             System.Xml.Serialization.XmlSerializer serializer =
                 new System.Xml.Serialization.XmlSerializer(typeof(Database));
 
@@ -47,5 +58,13 @@ namespace NorcusSetClient
             file.Close();
         }
         
+        public Song GetSongByTitle(string songTitle)
+        {
+            return Songs.FirstOrDefault(x => x.Title == songTitle);
+        }
+        public Song GetSongByFileName(string fileName)
+        {
+            return Songs.FirstOrDefault(x => x.FileName == fileName);
+        }
     }
 }

@@ -97,17 +97,15 @@ namespace NorcusSetClient
 
         public NorcusClientViewModel()
         {
-            Database = new Database();
-            Database.Load(databaseFile);
+            Database = new Database(databaseFile);
+            Database.Load();
 
             Client = new NorcusClient(HostIp, Port, Properties.Settings.Default.id);
             Client.SelectionChanged += Client_SelectionChanged;
             Client.RunClient();
 
             if (Properties.Settings.Default.logging)
-            {
                 Client.Logger = new Logger();
-            }
 
             SystemEvents.PowerModeChanged += SystemEvents_PowerModeChanged;
         }
