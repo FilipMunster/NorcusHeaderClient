@@ -9,6 +9,8 @@
         x:Name="NorcusWindow"
         Closing="NorcusWindow_Closing" 
         WindowStyle="ToolWindow" 
+        MinWidth="160"
+        MinHeight="90"
         Topmost="{Binding AlwaysOnTop}">
     <Window.DataContext>
         <local:NorcusClientViewModel/>
@@ -114,18 +116,49 @@
         </ContextMenu>
     </Window.ContextMenu>
     <Grid>
-        <ListBox ItemsSource="{Binding SetList}"
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="20"/>
+        </Grid.RowDefinitions>
+        <ListBox Grid.Row="0"
+                 ItemsSource="{Binding SetList}"
                  SelectedIndex="{Binding SongIndex, Mode=OneWay}"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  IsHitTestVisible="True"
                  FontSize="{Binding FontSize}"
                  x:Name="SetListBox" 
-                 ItemContainerStyle="{DynamicResource ListBoxItemStyle1}">
+                 ItemContainerStyle="{DynamicResource ListBoxItemStyle1}"
+                 SelectionChanged="SetListBox_SelectionChanged">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="90"/>
+            </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0" 
+                    Orientation="Horizontal" 
+                    VerticalAlignment="Center"
+                    Margin="3, 0, 0, 0">
+            <TextBlock Text="P: "/>
+                <TextBlock Text="{Binding PauseDuration}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" 
+                        Orientation="Horizontal" 
+                        VerticalAlignment="Center" 
+                        HorizontalAlignment="Right" 
+                        Margin="0, 0, 3, 0">
+                <TextBlock Text="S: "/>
+                <TextBlock Text="{Binding SetListDuration}"/>
+                <TextBlock Text=" ("/>
+                <TextBlock Text="{Binding SetEndTime}"/>
+                <TextBlock Text=")"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using System.Windows;
+using System.Windows.Threading;
 using Microsoft.Win32;
 
 namespace NorcusSetClient
@@ -11,6 +12,9 @@ namespace NorcusSetClient
     {
         private readonly string databaseFile = System.IO.Path.GetDirectoryName(
             Application.ResourceAssembly.Location) + "\\NorcusDatabase.xml";
+
+        private SetListManager _setListManager;
+
         public event PropertyChangedEventHandler PropertyChanged;
         public void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
@@ -81,33 +85,56 @@ namespace NorcusSetClient
 
         public string[] SetList
         {
-            //get
-            //{
-            //    if (Client.SetList is null)
-            //        return new string[] { Client.Message };
-            //    return Client.SetList;
-            //}
-            get 
+            get
             {
-                return new string[] { "První písnička", "Druhá písnička", "Třetí písnička",
-                "První písnička", "Druhá písnička", "Třetí písnička"};
+                if (Client.SetList is null)
+                    return new string[] { Client.Message };
+                return Client.SetList;
             }
         }
-        public int SongIndex => 1;// Client.CurrentSongIndex;
+        public int SongIndex => Client.CurrentSongIndex;
+
+        public string PauseDuration => new DateTime(_setListManager.PauseDuration.Ticks).ToString("mm:ss");
+        public string SetListDuration
+        {
+            get
+            {
+                string dur = new DateTime(_setListManager.SetListDuration.Ticks).ToString("mm");
+                if (dur[0] == '0')
+                    dur = dur.Remove(0, 1);
+                return dur + "min";
+            }
+        }
+        public string SetEndTime => _setListManager.SetEndTime.ToString("HH:mm");
 
         public NorcusClientViewModel()
         {
             Database = new Database(databaseFile);
             Database.Load();
 
+            _setListManager = new SetListManager(Database);
+
             Client = new NorcusClient(HostIp, Port, Properties.Settings.Default.id);
             Client.SelectionChanged += Client_SelectionChanged;
+            Client.SelectionChanged += _setListManager.SelectionChanged;
             Client.RunClient();
 
             if (Properties.Settings.Default.logging)
                 Client.Logger = new Logger();
 
             SystemEvents.PowerModeChanged += SystemEvents_PowerModeChanged;
+
+            DispatcherTimer dispatcherTimer = new DispatcherTimer();
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
+            dispatcherTimer.Tick += DispatcherTimer_Tick;
+            dispatcherTimer.Start();
+        }
+
+        private void DispatcherTimer_Tick(object sender, EventArgs e)
+        {
+            NotifyPropertyChanged(nameof(PauseDuration));
+            NotifyPropertyChanged(nameof(SetListDuration));
+            NotifyPropertyChanged(nameof(SetEndTime));
         }
 
         private void Client_SelectionChanged(object sender, NorcusClient.SelectionChangedEventArgs e)

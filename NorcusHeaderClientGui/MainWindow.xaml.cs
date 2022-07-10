@@ -41,5 +41,11 @@ namespace NorcusSetClient
             settingsWindow.Left = NorcusWindow.Left + 10;
             settingsWindow.Show();            
         }
+
+        private void SetListBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            var listBox = (System.Windows.Controls.ListBox)sender;
+            listBox.ScrollIntoView(listBox.SelectedItem);
+        }
     }
 }

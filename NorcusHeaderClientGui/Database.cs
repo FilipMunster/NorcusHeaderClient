@@ -29,18 +29,13 @@ namespace NorcusSetClient
             System.IO.FileStream file = System.IO.File.OpenRead(fileName);
             
             Database database;
-            try
-            {
-                object deserialized = serializer.Deserialize(file);
-                database = (Database)deserialized;
-            }
-            catch
-            {
-                file.Close();
-                return false;
-            }
-
+            object deserialized = serializer.Deserialize(file);
+            database = deserialized as Database;           
             file.Close();
+            
+            if (database is null)
+                return false;
+
             Songs = new List<Song>(database.Songs);
             return true;
         }
@@ -57,14 +52,40 @@ namespace NorcusSetClient
             serializer.Serialize(file, this);
             file.Close();
         }
-        
+
         public Song GetSongByTitle(string songTitle)
         {
             return Songs.FirstOrDefault(x => x.Title == songTitle);
         }
         public Song GetSongByFileName(string fileName)
         {
-            return Songs.FirstOrDefault(x => x.FileName == fileName);
+            Song song = Songs.FirstOrDefault(x => x.FileName == fileName);
+
+            if (song is null)
+            {
+                Songs.Add(new Song() { FileName = fileName });
+                song = Songs.Last();
+            }
+            return song;
+        }
+
+        public void UpdatePlayedSong(string fileName, int duration)
+        {
+            Song song = GetSongByFileName(fileName);
+
+            // pokud se písnička nehrála celá
+            if (duration < 60)
+                return;
+
+            // pokud byly noty zobrazené jen po dobu písničky, updatuji její průměrnou délku
+            if (duration < 600)
+            {
+                double newAverage = (song.TimesPlayed * song.AverageDuration + duration) / (song.TimesPlayed + 1);
+                song.AverageDuration = Convert.ToInt32(Math.Round(newAverage));
+            }
+
+            song.TimesPlayed++;
+            song.LastPlayed = DateTime.Now;
         }
     }
 }
