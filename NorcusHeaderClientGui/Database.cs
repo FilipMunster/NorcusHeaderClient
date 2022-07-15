@@ -14,7 +14,13 @@ namespace NorcusSetClient
         {
             dbFile = databaseFileName;
         }
+        public Database(string databaseFileName, Logger logger)
+        {
+            dbFile = databaseFileName;
+            Logger = logger;
+        }
         public List<Song> Songs { get; set; } = new List<Song>();
+        public Logger Logger { get; set; }
         
         public bool Load(string fileName = "")
         {
@@ -34,9 +40,13 @@ namespace NorcusSetClient
             file.Close();
             
             if (database is null)
+            {
+                Logger?.Log($"Database: Error loading database file {dbFile}.");
                 return false;
+            }
 
             Songs = new List<Song>(database.Songs);
+            Logger?.Log($"Database: Success loading database file \"{dbFile}\". {Songs.Count} songs loaded.");
             return true;
         }
         public void Save(string fileName = "")
@@ -51,6 +61,7 @@ namespace NorcusSetClient
 
             serializer.Serialize(file, this);
             file.Close();
+            Logger?.Log($"Database: Database saved to file \"{fileName}\".");
         }
 
         public Song GetSongByTitle(string songTitle)
@@ -65,6 +76,7 @@ namespace NorcusSetClient
             {
                 Songs.Add(new Song() { FileName = fileName });
                 song = Songs.Last();
+                Logger?.Log($"Database: Added new song to database: \"{fileName}\"");
             }
             return song;
         }
@@ -75,13 +87,21 @@ namespace NorcusSetClient
 
             // pokud se písnička nehrála celá
             if (duration < 60)
+            {
+                Logger?.Log($"Database: Song duration was not updated (too short): \"{fileName}\", duration {duration}s.");
                 return;
+            }
 
             // pokud byly noty zobrazené jen po dobu písničky, updatuji její průměrnou délku
-            if (duration < 600)
+            if (duration < 600 || duration < (song.AverageDuration * 1.5))
             {
                 double newAverage = (song.TimesPlayed * song.AverageDuration + duration) / (song.TimesPlayed + 1);
                 song.AverageDuration = Convert.ToInt32(Math.Round(newAverage));
+                Logger?.Log($"Database: Song duration updated: \"{fileName}\", dur: {duration}s, avg: {newAverage}s, count: {song.TimesPlayed + 1}");
+            }
+            else
+            {
+                Logger?.Log($"Database: Song duration was not updated (too long): \"{fileName}\", duration {duration}s.");
             }
 
             song.TimesPlayed++;

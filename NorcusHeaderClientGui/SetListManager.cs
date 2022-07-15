@@ -9,6 +9,7 @@ namespace NorcusSetClient
     class SetListManager
     {
         private Database _database;
+
         private string _currentSongFileName;
         private DateTime _currentSongStartTime = default;
         /// <summary>
